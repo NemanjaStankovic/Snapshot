@@ -1,0 +1,20 @@
+dotnet new console -n PlaywrightScreenshotApp
+cd PlaywrightScreenshotApp
+
+npm install -g playwright
+dotnet add package Microsoft.Playwright
+playwright install
+dotnet add package Microsoft.EntityFrameworkCore
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+dotnet add package Microsoft.EntityFrameworkCore.Design
+
+dotnet ef migrations add InitialCreate
+dotnet ef database update
+
+dotnet add package RestSharp
+dotnet add package Newtonsoft.Json
+
+dotnet add package Accord.Math
+dotnet add package Accord.Statistics
+
+pip install lexrank
