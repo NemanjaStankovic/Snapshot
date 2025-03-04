@@ -23,6 +23,8 @@ using Nest;
 using Elasticsearch.Net;
 using Humanizer;
 using static Humanizer.In;
+using System.Threading.Channels;
+using static System.Net.Mime.MediaTypeNames;
 
 class Program
 {
@@ -185,13 +187,12 @@ class Program
                 break;
         }
     }
-
     private static async Task Elasticsearch(string searchTerms, ITelegramBotClient bot, Message message)
     {
         // Perform the search in Elasticsearch
         var searchResponse = client.Search<Output>(s => s
             .Index("websites")  // Specify the index
-            .Size(1)            // Limit results to 1
+            .Size(10)            // Limit results to 1
             .Query(q => q
                 .Bool(b => b
                     .Should(
@@ -207,17 +208,43 @@ class Program
                         )
                     )
                 )
+            ).Highlight(h => h
+            .Fields(
+                f => f.Field("shortText"),
+                f => f.Field("siteDescription")
             )
+        )
         );
 
         if (searchResponse.IsValid && searchResponse.Documents.Count > 0)
         {
-            string response = "Search results:\n";
+            string response = "";
             foreach (var hit in searchResponse.Hits)
             {
-                response += $"URL: {hit.Source.URL}\nDescription: {hit.Source.SiteDescription}\nSummary: {hit.Source.ShortText}\nSnapshotPath: bin\\Debug\\net6.0\\{hit.Source.ScreenshotPath}\n";
+                var highlightedShortText = hit.Highlight.ContainsKey("shortText")
+               ? string.Join("...", hit.Highlight["shortText"])
+               : hit.Source.ShortText;
+
+                var highlightedSiteDescription = hit.Highlight.ContainsKey("siteDescription")
+                    ? string.Join("...", hit.Highlight["siteDescription"])
+                : hit.Source.SiteDescription;
+                highlightedShortText = highlightedShortText.Replace("<em>", "👉").Replace("</em>", "👈");
+                highlightedSiteDescription = highlightedSiteDescription.Replace("<em>", "👉").Replace("</em>", "👈");
+
+                response = "Search results:\n";
+                response += $"URL: {hit.Source.URL}\nDescription: {highlightedSiteDescription}\nSummary: {highlightedShortText}\nSnapshot 👇\n";
+                await bot.SendTextMessageAsync(message.Chat.Id, response);
+
+                string filePath = @$"C:\Users\neman\Desktop\Snapshot\PlaywrightScreenshotApp\bin\Debug\net6.0\{hit.Source.ScreenshotPath}";  // Replace with your local file path
+                using (var stream = new FileStream(filePath, FileMode.Open))
+                {
+                    await bot.SendPhotoAsync(
+                        chatId: message.Chat.Id, // Chat ID to send the photo to
+                        photo: stream // Stream the photo directly
+                    );
+                }
             }
-            await bot.SendTextMessageAsync(message.Chat.Id, response);
+            //await bot.SendTextMessageAsync(message.Chat.Id, response);
         }
         else
         {
