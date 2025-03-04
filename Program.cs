@@ -1,15 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Playwright;
+﻿using Microsoft.Playwright;
 using System.Diagnostics;
-using System;
-using System.Linq;
-using Accord.Math;
-using Accord.Math.Decompositions;
-using Accord.Statistics.Analysis;
-using RestSharp;
-using Newtonsoft.Json.Linq;  // If you are using JSON parsing
-using System.Text.RegularExpressions;
-using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using System;
@@ -34,11 +24,11 @@ class Program
     static async Task Main(string[] args)
     {
         var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
-    .DefaultIndex("websites")
-    .BasicAuthentication("elastic", "elastic")
-    .ServerCertificateValidationCallback(CertificateValidations.AllowAll) // 🚨 Ignores certificate validation
-    .DisableDirectStreaming()
-    .EnableDebugMode();
+            .DefaultIndex("websites")
+            .BasicAuthentication("elastic", "elastic")
+            .ServerCertificateValidationCallback(CertificateValidations.AllowAll) // Ignores certificate validation
+            .DisableDirectStreaming()
+            .EnableDebugMode();
         client = new ElasticClient(settings);
         var pingResponse = client.Ping();
         if (!pingResponse.IsValid)
@@ -78,14 +68,12 @@ class Program
         if (!url.StartsWith("http://") && !url.StartsWith("https://"))
             url = "https://" + url;
 
-        // Launch the browser (Chromium in this case)
         var playwright = await Playwright.CreateAsync();
         var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
-        var dbContext = new AppDbContext();
+        
         // Create a new browser page (tab)
         var page = await browser.NewPageAsync();
-        //var url = "https://www.hcl.hr/vijest/vraca-se-minimalisticka-gradnja-grada-strategiju-islanders-new-shores-226004/";
-        // Navigate to a URL
+
         try
         {
             await page.GotoAsync(url, new PageGotoOptions { Timeout = 10000 });
@@ -99,15 +87,11 @@ class Program
 
         string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmssfff");
         string sspath=$"screenshot_{timestamp}.png";
-        // Take a screenshot of the page
         await page.ScreenshotAsync(new PageScreenshotOptions { Path = sspath});
-
-        string pageText = await page.InnerTextAsync("body"); // Extract text from the entire body
+        string pageText = await page.InnerTextAsync("body"); 
         string summary = GetSummaryFromPython(pageText);
-
         var metaDescription = await page.GetAttributeAsync("meta[name='description']", "content");
 
-        // Close the browser
         await browser.CloseAsync();
         var output = new Output{
             URL=url,
@@ -118,8 +102,8 @@ class Program
 
         //elastic search
         var indexResponse = client.Index(output, i => i
-        .Index("websites")  // Make sure we use the correct index
-        .Id(timestamp)  // Generate a unique ID
+        .Index("websites")
+        .Id(timestamp)
 );
         Console.WriteLine(indexResponse.DebugInformation);
         if (indexResponse.IsValid)
@@ -130,32 +114,34 @@ class Program
         {
             Console.WriteLine("Not successful indexing!");
         }
+
+        var dbContext = new AppDbContext();
         dbContext.Outputs.Add(output);
         await dbContext.SaveChangesAsync();
 
         //checking
-        var searchResponse = client.Search<Output>(s => s
-    .Index("websites")
-    .Size(10) // Get up to 10 results
-    .Query(q => q.MatchAll()) // Get everything
-);
+//        var searchResponse = client.Search<Output>(s => s
+//    .Index("websites")
+//    .Size(10) 
+//    .Query(q => q.MatchAll()) 
+//);
 
-        if (searchResponse.IsValid)
-        {
-            Console.WriteLine("Documents in 'websites' index:");
-            foreach (var doc in searchResponse.Documents)
-            {
-                Console.WriteLine($"- URL: {doc.URL}");
-                Console.WriteLine($"  Description: {doc.SiteDescription}");
-                Console.WriteLine($"  Summary: {doc.ShortText}");
-                Console.WriteLine("-----------");
-            }
-        }
-        else
-        {
-            Console.WriteLine("Failed to retrieve documents.");
-            Console.WriteLine(searchResponse.DebugInformation);
-        }
+//        if (searchResponse.IsValid)
+//        {
+//            Console.WriteLine("Documents in 'websites' index:");
+//            foreach (var doc in searchResponse.Documents)
+//            {
+//                Console.WriteLine($"- URL: {doc.URL}");
+//                Console.WriteLine($"  Description: {doc.SiteDescription}");
+//                Console.WriteLine($"  Summary: {doc.ShortText}");
+//                Console.WriteLine("-----------");
+//            }
+//        }
+//        else
+//        {
+//            Console.WriteLine("Failed to retrieve documents.");
+//            Console.WriteLine(searchResponse.DebugInformation);
+//        }
 
         Console.WriteLine("Screenshot taken!");
         await bot.SendTextMessageAsync(message.Chat.Id, $"Screenshot of {url} taken! 😊", cancellationToken: token);
@@ -191,8 +177,8 @@ class Program
     {
         // Perform the search in Elasticsearch
         var searchResponse = client.Search<Output>(s => s
-            .Index("websites")  // Specify the index
-            .Size(10)            // Limit results to 1
+            .Index("websites")  
+            .Size(10)            
             .Query(q => q
                 .Bool(b => b
                     .Should(
@@ -239,8 +225,8 @@ class Program
                 using (var stream = new FileStream(filePath, FileMode.Open))
                 {
                     await bot.SendPhotoAsync(
-                        chatId: message.Chat.Id, // Chat ID to send the photo to
-                        photo: stream // Stream the photo directly
+                        chatId: message.Chat.Id, 
+                        photo: stream 
                     );
                 }
             }
