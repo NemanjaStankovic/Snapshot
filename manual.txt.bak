@@ -16,3 +16,10 @@ dotnet add package Newtonsoft.Json
 
 dotnet add package Accord.Math
 dotnet add package Accord.Statistics
+
+pip install lexrank
+
+dotnet add package Telegram.Bot
+dotnet add package Telegram.Bot --version 22.4.4
+
+docker pull docker.elastic.co/elasticsearch/elasticsearch:8.5.0

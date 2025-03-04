@@ -393,3 +393,5 @@ C:\Users\neman\Desktop\Snapshot\PlaywrightScreenshotApp\obj\Debug\net6.0\refint\
 C:\Users\neman\Desktop\Snapshot\PlaywrightScreenshotApp\obj\Debug\net6.0\PlaywrightScreenshotApp.pdb
 C:\Users\neman\Desktop\Snapshot\PlaywrightScreenshotApp\obj\Debug\net6.0\PlaywrightScreenshotApp.genruntimeconfig.cache
 C:\Users\neman\Desktop\Snapshot\PlaywrightScreenshotApp\obj\Debug\net6.0\ref\PlaywrightScreenshotApp.dll
+C:\Users\neman\Desktop\Snapshot\PlaywrightScreenshotApp\bin\Debug\net6.0\Elasticsearch.Net.dll
+C:\Users\neman\Desktop\Snapshot\PlaywrightScreenshotApp\bin\Debug\net6.0\Nest.dll
