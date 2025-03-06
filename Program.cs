@@ -48,7 +48,7 @@ class Program
 
         var receiverOptions = new ReceiverOptions
         {
-            AllowedUpdates = Array.Empty<UpdateType>() // Receive all updates
+            AllowedUpdates = Array.Empty<UpdateType>()
         };
 
         Bot.StartReceiving(
@@ -59,7 +59,7 @@ class Program
         );
 
         Console.WriteLine("Bot is running...");
-        await Task.Delay(-1, cts.Token); // Keep the bot running
+        await Task.Delay(-1, cts.Token);
 
        
     }
@@ -71,7 +71,7 @@ class Program
         var playwright = await Playwright.CreateAsync();
         var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
         
-        // Create a new browser page (tab)
+        // create a new browser page
         var page = await browser.NewPageAsync();
 
         try
@@ -119,7 +119,7 @@ class Program
         dbContext.Outputs.Add(output);
         await dbContext.SaveChangesAsync();
 
-        //checking
+        //checking indexes
 //        var searchResponse = client.Search<Output>(s => s
 //    .Index("websites")
 //    .Size(10) 
@@ -175,7 +175,6 @@ class Program
     }
     private static async Task Elasticsearch(string searchTerms, ITelegramBotClient bot, Message message)
     {
-        // Perform the search in Elasticsearch
         var searchResponse = client.Search<Output>(s => s
             .Index("websites")  
             .Size(10)            
@@ -221,7 +220,7 @@ class Program
                 response += $"URL: {hit.Source.URL}\nDescription: {highlightedSiteDescription}\nSummary: {highlightedShortText}\nSnapshot 👇\n";
                 await bot.SendTextMessageAsync(message.Chat.Id, response);
 
-                string filePath = @$"C:\Users\neman\Desktop\Snapshot\PlaywrightScreenshotApp\bin\Debug\net6.0\{hit.Source.ScreenshotPath}";  // Replace with your local file path
+                string filePath = @$"C:\Users\neman\Desktop\Snapshot\PlaywrightScreenshotApp\bin\Debug\net6.0\{hit.Source.ScreenshotPath}";
                 using (var stream = new FileStream(filePath, FileMode.Open))
                 {
                     await bot.SendPhotoAsync(
@@ -230,11 +229,10 @@ class Program
                     );
                 }
             }
-            //await bot.SendTextMessageAsync(message.Chat.Id, response);
         }
         else
         {
-            await bot.SendTextMessageAsync(message.Chat.Id, $"No results found. {searchResponse.DebugInformation}");
+            await bot.SendTextMessageAsync(message.Chat.Id, $"No results found.");
         }
     }
 
@@ -248,30 +246,29 @@ class Program
         string pythonScript = "C:\\Users\\neman\\Desktop\\Snapshot\\PlaywrightScreenshotApp\\lexrank_summary.py";
         string tempFilePath = Path.Combine(Path.GetTempPath(), "snapshot_input.txt");
 
-        // Save inputText to a temporary file
+        // save inputText to a temporary file
         File.WriteAllText(tempFilePath, inputText);
         ProcessStartInfo startInfo = new ProcessStartInfo()
         {
             FileName = "C:\\Users\\neman\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
-            Arguments = $"\"{pythonScript}\" \"{tempFilePath}\"", // Pass filename instead of long text
+            Arguments = $"\"{pythonScript}\" \"{tempFilePath}\"",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true,
-            StandardOutputEncoding = System.Text.Encoding.UTF8 // Force UTF-8 encoding
+            StandardOutputEncoding = System.Text.Encoding.UTF8
         };
         Console.WriteLine("Using Python at: " + startInfo.FileName);
 
         try
         {
-            // Start the Python process
             using (Process process = Process.Start(startInfo))
             {
                 using (StreamReader reader = process.StandardOutput)
                 using (StreamReader errorReader = process.StandardError)
                 {
-                    string output = reader.ReadToEnd();  // Capture standard output
-                    string errors = errorReader.ReadToEnd();  // Capture standard error
+                    string output = reader.ReadToEnd();
+                    string errors = errorReader.ReadToEnd();
 
                     if (!string.IsNullOrEmpty(errors))
                     {
@@ -284,7 +281,6 @@ class Program
         }
         catch (Exception ex)
         {
-            // Handle exceptions (e.g., if the Python script doesn't run)
             Console.WriteLine("Error: " + ex.Message);
             return null;
         }
